@@ -1,5 +1,4 @@
-import { isEmpty } from "lodash";
-import React, { useState } from "react";
+import React from "react";
 import Row from "./Row";
 
 const Table = ({ 

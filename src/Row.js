@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useContext } from "react";
+import { StateContext } from "./App";
 
 const Input = ({id, col, value, updateEntry}) => {
   const onChange = (e) => {
@@ -8,15 +9,40 @@ const Input = ({id, col, value, updateEntry}) => {
   return <input value={value} onChange={onChange} />; 
 }
 
+const DropDown = ({id, col, selectedId, updateEntry}) => {
+  const state = useContext(StateContext);
+  const options = state[col]; // col is FULLNAME or CATEGORY
+
+  const onChange = (e) => {
+    updateEntry(id, col, e.target.value);
+  }
+
+  return (
+    <select onChange={onChange} value={options[selectedId]}>
+      {Object.keys(options).map((optionId) => {
+        return (
+          <option            
+            key={optionId}
+            value={optionId}
+          >
+            {options[optionId]}
+          </option>
+        );   
+      })}
+    </select>
+  );
+}
+
 // Take event listener, and props
 const Component = (id, col, type, props, updateEntry) => {
+  console.log(id, col, type, props)
   if (type === "div") {
     return <div>{props}</div>
   } else if (type === "input") {
     // Another component
     return ( 
       <Input
-        id={ id}
+        id={id}
         col={col}
         value={props}
         updateEntry={updateEntry} 
@@ -24,7 +50,14 @@ const Component = (id, col, type, props, updateEntry) => {
     );
   } else if (type === "dropdown") {
     // Another component
-    return <div {...props}>DROPDOWN</div>
+    return ( 
+      <DropDown
+        id={id}
+        col={col}
+        selected={props}
+        updateEntry={updateEntry} 
+      />
+    );
   }
 }
 
