@@ -1,61 +1,73 @@
-import { clone, cloneDeep, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import React, { createContext, useState } from 'react';
 import './App.css';
 import Table from './Table';
 
 export const StateContext = createContext();
 
-const Users = {
-  1: { ID: 1, FIRSTNAME: "JINHUA", LASTNAME: "CHEN", TOTALEXPENSE: 100 },
-  2: { ID: 2, FIRSTNAME: "JIN", LASTNAME: "CHEN", TOTALEXPENSE: 100 },
-  3: { ID: 3, FIRSTNAME: "JINNIE", LASTNAME: "CHEN", TOTALEXPENSE: 100 },
-}
-
 const CATEGORY = { 1: "FOOD", 2: "TRAVEL", 3: "SUPPLIES" };
 
 function App() {
-  const [users, setUsers] = useState(Users);
+  const [users, setUsers] = useState({});
   const [expenses, setExpenses] = useState({});
   const [categories, setCategories] = useState({});
+  const [userExpenses, setUserExpenses] = useState({});
 
   const addUser = () => {
-    const id = Math.floor(Math.random() * 100);
+    const id = Date.now();
     const newUser = { ID: id, FIRSTNAME: "", LASTNAME: "", TOTALEXPENSE: 0 };
+
     setUsers({
       ...users,
       [id]: newUser,
     });
-  }
 
-  const updateUser = (id, key, value) => {
-    const user = cloneDeep(users[id]);
-    user[key] = value;
-
-    setUsers({
-      ...users,
-      [id]: user,
+    setUserExpenses({
+      ...userExpenses,
+      [id]: new Set(),
     });
   }
 
-  const saveUser = (id) => {
-    if (isEmpty(users[id].FIRSTNAME) || isEmpty(users[id].LASTNAME)) {
+  const saveUser = (user) => {
+    if (isEmpty(user.FIRSTNAME) || isEmpty(user.LASTNAME)) {
       alert("FIRST NAME or LAST NAME is empty");
+      return;
     }
+
+    setUsers({
+      ...users,
+      [user.ID]: user,
+    });
   }
 
   const deleteUser = (id) => {
-    const usersCopy = cloneDeep(users);
+    const usersCopy = { ...users };
+    const userExpensesCopy = { ...userExpenses };
+    const expensesCopy = { ...expenses };
+    const categoriesCopy = { ...categories };
+    
+    userExpensesCopy[id].forEach((value) => {
+      const categoryId = expensesCopy[value].CATEGORY;
+      const cost = expensesCopy[value].COST;
+
+      categoriesCopy[categoryId].TOTALEXPENSES -= cost;
+      delete expensesCopy[value];
+    });
+
     delete usersCopy[id];
+    delete userExpensesCopy[id];
 
     setUsers(usersCopy);
+    setUserExpenses(userExpensesCopy);
+    setExpenses(expensesCopy);
+    setCategories(categories);
   }
 
   const addExpense = () => {
-    const expenseId = Math.floor(Math.random() * 100);
-    const userId = -1;
+    const expenseId = Date.now();
     const newExpense = {
       ID: expenseId, 
-      USERID: userId,
+      USERID: "",
       CATEGORY: "",
       DESCRIPTION: "",
       COST: 0,
@@ -67,49 +79,69 @@ function App() {
     });
   }
 
-  const updateExpense = (id, key, value) => {
-    if (key === "FULLNAME") {
-      key = "USERID";
-    }
-
-    const expense = cloneDeep(expenses[id]);
-    expense[key] = value;
-
-    setExpenses({
-      ...expenses,
-      [id]: expense,
-    });
-  }
-
-  const saveExpense = (id) => {
-    if (expenses[id].USERID === -1 || isEmpty(expenses[id].CATEGORY) || expenses[id].COST <= 0) {
+  const saveExpense = (expense) => {
+    if (isEmpty(expense.USERID) || isEmpty(expense.CATEGORY) || expense.COST <= 0) {
       alert("User or Category is unselected or cost must be greater than 0");
+      return;
     }
 
-    const user = cloneDeep(users[expenses[id].USERID]);
-    user.TOTALEXPENSE += expenses[id].COST;
+    // Update user's expense number
+    const userCopy = { ...users[expense.USERID] };
+    const oldCost = expenses[expense.ID].COST;
+    userCopy.TOTALEXPENSE = userCopy.TOTALEXPENSE - oldCost + parseFloat(expense.COST);
+
+    // Update company's expense
+    const categoryCopy = categories[expense.CATEGORY] === undefined 
+                        ? { ID: expense.CATEGORY, TOTALEXPENSES: 0, CATEGORY: "" } 
+                        : { ...categories[expense.CATEGORY] };
+    
+    categoryCopy.CATEGORY = CATEGORY[expense.CATEGORY];
+    categoryCopy.TOTALEXPENSES = categoryCopy.TOTALEXPENSES - oldCost + parseFloat(expense.COST);
+    
+    // Update user's expenses items
+    const userExpensesCopy = { ...userExpenses };
+    userExpensesCopy[expense.USERID].add(expense.ID);
 
     setUsers({
       ...users,
-      [user.ID]: user,
+      [userCopy.ID]: userCopy, 
     });
 
-    const categoryID = CATEGORY[expenses[id].CATEGORY];
-    let totalExpense = categories[categoryID] === undefined ? 0 : categories[categoryID]; 
-    totalExpense += expenses[id].COST;
-    
-    debugger
+    setExpenses({
+      ...expenses,
+      [expense.ID]: expense,
+    });
+
     setCategories({
       ...categories,
-      [expenses[id].CATEGORY]: { CATEGORY: categoryID, TOTALEXPENSES: totalExpense}, 
+      [categoryCopy.ID]: categoryCopy,
+    });
+
+    setUserExpenses({
+      ...userExpensesCopy,
     });
   }
 
   const deleteExpense = (id) => {
-    const expensesCopy = cloneDeep(expenses);
+    const expensesCopy = { ...expenses };
+
+    const userID = expensesCopy[id].USERID;
+    const categoryID = expensesCopy[id].CATEGORY;
+    
+    const user = { ...users[userID] };
+    const category = { ...categories[categoryID] };
+    const userExpensesCopy = { ...userExpenses };
+    
+    user.TOTALEXPENSE -= expenses[id].COST;
+    category.TOTALEXPENSES -= expenses[id].COST;
+    userExpensesCopy[userID].delete(id);
+
     delete expensesCopy[id];
 
     setExpenses(expensesCopy);
+    setUsers({ ...users, [userID]: user });
+    setCategories({ ...categories, [categoryID]: category });
+    setUserExpenses({ ...userExpensesCopy });
   }
 
   const validUsers = {};
@@ -121,30 +153,30 @@ function App() {
 
   return (
     <div className="App">
-      <StateContext.Provider value={{ FULLNAME: validUsers, CATEGORY }}>
+      <StateContext.Provider value={{ FULLNAME: validUsers, CATEGORY, categories, users, expenses }}>
         <Table 
-          data={users} 
+          type="users" 
           columns={["ID", "FIRSTNAME", "LASTNAME", "TOTALEXPENSE"]} 
           addEntry={addUser}
-          updateEntry={updateUser}
           deleteEntry={deleteUser}
           saveEntry={saveUser}
           columnsTypes={["div", "input", "input", "div"]}
         />
         <Table 
-          data={expenses} 
+          type="expenses" 
           columns={["ID", "FULLNAME", "CATEGORY", "DESCRIPTION", "COST"]} 
           addEntry={addExpense}
-          updateEntry={updateExpense}
           deleteEntry={deleteExpense}
           saveEntry={saveExpense}
           columnsTypes={["div", "dropdown", "dropdown", "input", "input"]}
         />
         <Table 
-          data={categories} 
+          type="categories" 
           columns={["CATEGORY", "TOTALEXPENSES"]}
           columnsTypes={["div", "div"]}
+          readOnly={true}
         />
+        Click Save to commit changes
       </StateContext.Provider>
     </div>
   );

@@ -1,33 +1,44 @@
-import React from "react";
+import { cloneDeep } from "lodash";
+import React, { useCallback, useContext, useState } from "react";
+import { StateContext } from "./App";
 import Row from "./Row";
 
-const Table = ({ 
-  data, 
+const Table = ({
+  type,
   columns, 
   addEntry, 
   updateEntry,
   deleteEntry,
   saveEntry,
-  columnsTypes, 
+  columnsTypes,
+  readOnly = false,
 }) => {
-  // debugger
+  const state = useContext(StateContext);
+  const data = state[type];
+  const colWidth = `${1 / (columns.length + 2) * 100}%`;
+
   return (
-    <div style={{ border: "2px solid black" }}>
+    <div style={{ margin: "auto", border: "2px solid black", width: "70%" }}>
+      <div>{`${type.toUpperCase()} TABLE`}</div>
       <div style={{ display: "flex", justifyContent: "space-around" }}>
-        {columns.map((col, idx)=> <div key={idx}>{col}</div>)}
+        {columns.map((col, idx)=> <div style={{ width: colWidth }} key={idx}>{col}</div>)}
+        {!readOnly && <div style={{ width: colWidth }}/>}
+        {!readOnly && <div style={{ width: colWidth }}/>}
       </div>
-      {Object.keys(data).map(ele => 
+      {Object.keys(data).map(eleId => 
         <Row
-          key={ele}
-          data={data[ele]}
+          key={eleId}
+          data={data[eleId]}
           columns={columns}
           columnsTypes={columnsTypes}
           saveEntry={saveEntry}
           updateEntry={updateEntry}
           deleteEntry={deleteEntry}
+          readOnly={readOnly}
+          columnWidth={colWidth}
         />
       )}
-      <button onClick={addEntry}>Add Things</button>
+      {!readOnly && <button onClick={addEntry}>{`Add ${type}`}</button>}
     </div>
   );
 }
