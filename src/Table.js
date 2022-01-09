@@ -1,5 +1,4 @@
-import { cloneDeep } from "lodash";
-import React, { useCallback, useContext, useState } from "react";
+import React, { useContext } from "react";
 import { StateContext } from "./App";
 import Row from "./Row";
 
@@ -18,7 +17,7 @@ const Table = ({
   const colWidth = `${1 / (columns.length + 2) * 100}%`;
 
   return (
-    <div style={{ margin: "auto", border: "2px solid black", width: "70%" }}>
+    <div style={{ margin: "auto", border: "2px solid black", width: "90%" }}>
       <div>{`${type.toUpperCase()} TABLE`}</div>
       <div style={{ display: "flex", justifyContent: "space-around" }}>
         {columns.map((col, idx)=> <div style={{ width: colWidth }} key={idx}>{col}</div>)}
