@@ -15,7 +15,7 @@ const Input = ({
 
 const DropDown = ({
   col,
-  selectedId,
+  selected,
   onChange
 }) => {
   const state = useContext(StateContext);
@@ -27,28 +27,25 @@ const DropDown = ({
 
   return (
     <select
-      defaultValue="Choose an option"
       onChange={handleOnChange}
-      value={options[selectedId]}
+      value={selected || "Choose an option"}
     >
       <option disabled>Choose an option</option>
-      {Object.keys(options).map((optionId) => {
-        return (
-          <option            
-            key={optionId}
-            value={optionId}
-          >
-            {options[optionId]}
-          </option>
-        );   
-      })}
+      {Object.keys(options).map((optionId) => (
+        <option            
+          key={optionId}
+          value={optionId}
+        >
+          {options[optionId]}
+        </option>
+      ))}
     </select>
   );
 }
 
-const Component = (id, col, type, props, onChange, columnWidth) => {
+const Component = (id, col, type, value, onChange, columnWidth) => {
   if (type === "div") {
-    return (<div key={col} style={{ width: columnWidth }}>{props}</div>);
+    return <div key={col} style={{ width: columnWidth }}>{value}</div>;
   } else if (type === "input") {
     return (
       <div key={col} style={{ width: columnWidth }}>
@@ -56,7 +53,7 @@ const Component = (id, col, type, props, onChange, columnWidth) => {
           col={col}
           handleOnChange={onChange}
           id={id}
-          value={props}
+          value={value}
         />
       </div>
     );
@@ -66,7 +63,7 @@ const Component = (id, col, type, props, onChange, columnWidth) => {
         <DropDown
           col={col}
           onChange={onChange}
-          selected={props}
+          selected={value}
         />
       </div>
     );
@@ -106,7 +103,10 @@ const Row = ({
   
   return (
     <div style={{ display: "flex", justifyContent: "space-around" }}>
-      {columns.map((col, idx) => Component(localData.ID, col, columnsTypes[idx], localData[col], onChange, columnWidth))}
+      {columns.map((col, idx) => {
+        const value = col !== "FULLNAME" ? localData[col] : localData["USERID"];
+        return Component(localData.ID, col, columnsTypes[idx], value, onChange, columnWidth);
+      })}
       {!readOnly && <button onClick={onClickSave} style={{ width: columnWidth }}>save</button>}
       {!readOnly && <button onClick={onClickDelete} style={{ width: columnWidth }}>delete</button>}
     </div>

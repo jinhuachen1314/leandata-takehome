@@ -94,7 +94,7 @@ function App() {
     }
 
     const userId = expense.USERID, categoryId = expense.CATEGORY;
-    const currUserId = expenses[expense.ID].USERID;
+    const currUserId = expenses[expense.ID].USERID, currCategoryId = expenses[expense.ID].CATEGORY;
 
     // Update user's expense number
     const usersCopy = { ...users };
@@ -114,7 +114,18 @@ function App() {
     
     // Update company's expense
     const categoriesCopy = { ...categories };
-    categoriesCopy[categoryId].TOTALEXPENSES = categoriesCopy[categoryId].TOTALEXPENSES - oldCost + parseFloat(expense.COST);
+
+    if (currCategoryId === "") {
+      // Add a new expense to company expenses
+      categoriesCopy[categoryId].TOTALEXPENSES += parseFloat(expense.COST);
+    } else if (currCategoryId === categoryId) {
+      // Update to the same category
+      categoriesCopy[categoryId].TOTALEXPENSES = categoriesCopy[categoryId].TOTALEXPENSES - oldCost + parseFloat(expense.COST);
+    } else if (currCategoryId !== categoryId) {
+      // Change category
+      categoriesCopy[currCategoryId].TOTALEXPENSES -= expenses[expense.ID].COST // Revert old category expenses
+      categoriesCopy[categoryId].TOTALEXPENSES += parseFloat(expense.COST); // Add expense to new category
+    }
     
     // Update user's expenses items
     const userExpensesCopy = { ...userExpenses };
@@ -155,6 +166,7 @@ function App() {
     setUserExpenses(userExpensesCopy);
   }
 
+  // Rendering FULLNAME can be smarter
   const validUsers = {};
   for (const key in users) {
     if (!isEmpty(users[key].FIRSTNAME) && !isEmpty(users[key].LASTNAME)) {
