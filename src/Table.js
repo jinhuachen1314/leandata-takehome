@@ -20,21 +20,21 @@ const Table = ({
     <div style={{ margin: "auto", border: "2px solid black", width: "90%" }}>
       <div>{`${type.toUpperCase()} TABLE`}</div>
       <div style={{ display: "flex", justifyContent: "space-around" }}>
-        {columns.map((col, idx)=> <div style={{ width: colWidth }} key={idx}>{col}</div>)}
+        {columns.map((col, idx)=> <div key={idx} style={{ width: colWidth }}>{col}</div>)}
         {!readOnly && <div style={{ width: colWidth }}/>}
         {!readOnly && <div style={{ width: colWidth }}/>}
       </div>
       {Object.keys(data).map(eleId => 
         <Row
-          key={eleId}
-          data={data[eleId]}
+          columnWidth={colWidth}
           columns={columns}
           columnsTypes={columnsTypes}
+          data={data[eleId]}
+          deleteEntry={deleteEntry}
+          key={eleId}
+          readOnly={readOnly}
           saveEntry={saveEntry}
           updateEntry={updateEntry}
-          deleteEntry={deleteEntry}
-          readOnly={readOnly}
-          columnWidth={colWidth}
         />
       )}
       {!readOnly && <button onClick={addEntry}>{`Add ${type}`}</button>}

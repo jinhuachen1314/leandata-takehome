@@ -10,16 +10,14 @@ const Input = ({
     handleOnChange(col, e.target.value);
   }
 
-  return <input value={value} onChange={onChange} />; 
+  return <input onChange={onChange} value={value} />; 
 }
 
 const DropDown = ({
-  id,
   col,
   selectedId,
   onChange
 }) => {
-  // console.log(id, col, selectedId)
   const state = useContext(StateContext);
   const options = state[col];
 
@@ -29,9 +27,9 @@ const DropDown = ({
 
   return (
     <select
+      defaultValue="Choose an option"
       onChange={handleOnChange}
       value={options[selectedId]}
-      defaultValue="Choose an option"
     >
       <option disabled>Choose an option</option>
       {Object.keys(options).map((optionId) => {
@@ -49,17 +47,16 @@ const DropDown = ({
 }
 
 const Component = (id, col, type, props, onChange, columnWidth) => {
-  // console.log(col, type, props)
   if (type === "div") {
     return (<div key={col} style={{ width: columnWidth }}>{props}</div>);
   } else if (type === "input") {
     return (
       <div key={col} style={{ width: columnWidth }}>
         <Input
-          id={id}
           col={col}
-          value={props}
           handleOnChange={onChange}
+          id={id}
+          value={props}
         />
       </div>
     );
@@ -67,10 +64,9 @@ const Component = (id, col, type, props, onChange, columnWidth) => {
     return ( 
       <div key={col} style={{ width: columnWidth }}>
         <DropDown
-          id={id}
           col={col}
-          selected={props}
           onChange={onChange}
+          selected={props}
         />
       </div>
     );
@@ -111,8 +107,8 @@ const Row = ({
   return (
     <div style={{ display: "flex", justifyContent: "space-around" }}>
       {columns.map((col, idx) => Component(localData.ID, col, columnsTypes[idx], localData[col], onChange, columnWidth))}
-      {!readOnly && <button style={{ width: columnWidth }} onClick={onClickSave}>save</button>}
-      {!readOnly && <button style={{ width: columnWidth }} onClick={onClickDelete}>delete</button>}
+      {!readOnly && <button onClick={onClickSave} style={{ width: columnWidth }}>save</button>}
+      {!readOnly && <button onClick={onClickDelete} style={{ width: columnWidth }}>delete</button>}
     </div>
   );
 }

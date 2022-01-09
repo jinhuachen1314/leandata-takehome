@@ -88,18 +88,30 @@ function App() {
   }
 
   const saveExpense = (expense) => {
-    if (isEmpty(expense.USERID) || isEmpty(expense.CATEGORY) || expense.COST <= 0) {
-      alert("User or Category is unselected or cost must be greater than 0");
+    if (isEmpty(expense.USERID) || isEmpty(expense.CATEGORY) || expense.COST <= 0 || isNaN(expense.COST)) {
+      alert("User or Category is unselected or cost must be a number that is greater than 0");
       return;
     }
 
     const userId = expense.USERID, categoryId = expense.CATEGORY;
+    const currUserId = expenses[expense.ID].USERID;
 
     // Update user's expense number
     const usersCopy = { ...users };
     const oldCost = expenses[expense.ID].COST; // Update user's expense when updating an existing expense
-    usersCopy[userId].TOTALEXPENSE = usersCopy[userId].TOTALEXPENSE - oldCost + parseFloat(expense.COST);
 
+    if (currUserId === "") {
+      // Add a new expense to a user
+      usersCopy[userId].TOTALEXPENSE += parseFloat(expense.COST);
+    } else if (userId === currUserId) {
+      // Update to the same user
+      usersCopy[userId].TOTALEXPENSE = usersCopy[userId].TOTALEXPENSE - oldCost + parseFloat(expense.COST);
+    } else if (userId !== currUserId) {
+      // Change user
+      usersCopy[currUserId].TOTALEXPENSE -= expenses[expense.ID].COST; // Revert old user's total expense
+      usersCopy[userId].TOTALEXPENSE += parseFloat(expense.COST); // Add expense to new user
+    }
+    
     // Update company's expense
     const categoriesCopy = { ...categories };
     categoriesCopy[categoryId].TOTALEXPENSES = categoriesCopy[categoryId].TOTALEXPENSES - oldCost + parseFloat(expense.COST);
@@ -107,6 +119,10 @@ function App() {
     // Update user's expenses items
     const userExpensesCopy = { ...userExpenses };
     userExpensesCopy[userId].add(expense.ID);
+
+    if (currUserId !== "" && userId !== currUserId) {
+      userExpensesCopy[currUserId].delete(expense.ID);
+    }
 
     // Update expense
     const expensesCopy = { ...expenses };
@@ -150,26 +166,26 @@ function App() {
     <div className="App">
       <StateContext.Provider value={{ FULLNAME: validUsers, CATEGORY, categories, users, expenses }}>
         <Table 
-          type="users" 
+          addEntry={addUser} 
           columns={["ID", "FIRSTNAME", "LASTNAME", "TOTALEXPENSE"]} 
-          addEntry={addUser}
+          columnsTypes={["div", "input", "input", "div"]}
           deleteEntry={deleteUser}
           saveEntry={saveUser}
-          columnsTypes={["div", "input", "input", "div"]}
+          type="users"
         />
         <Table 
-          type="expenses" 
+          addEntry={addExpense} 
           columns={["ID", "FULLNAME", "CATEGORY", "DESCRIPTION", "COST"]} 
-          addEntry={addExpense}
+          columnsTypes={["div", "dropdown", "dropdown", "input", "input"]}
           deleteEntry={deleteExpense}
           saveEntry={saveExpense}
-          columnsTypes={["div", "dropdown", "dropdown", "input", "input"]}
+          type="expenses"
         />
         <Table 
-          type="categories" 
-          columns={["CATEGORY", "TOTALEXPENSES"]}
+          columns={["CATEGORY", "TOTALEXPENSES"]} 
           columnsTypes={["div", "div"]}
           readOnly={true}
+          type="categories"
         />
         Click Save to commit changes!
       </StateContext.Provider>
