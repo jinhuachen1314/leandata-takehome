@@ -131,6 +131,7 @@ function App() {
     const userExpensesCopy = { ...userExpenses };
     userExpensesCopy[userId].add(expense.ID);
 
+    // Add some comment
     if (currUserId !== "" && userId !== currUserId) {
       userExpensesCopy[currUserId].delete(expense.ID);
     }
